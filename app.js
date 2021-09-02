@@ -31,6 +31,19 @@ const db = require('./helpers/db.js');
     });
   });
   
+  app.get('/keluar-group', async (rq,rs)=>{
+    try{
+       let c = await client.getChats();
+       c.forEach(async(chat)=>{
+          if(chat.isGroup){
+            await chat.leave();
+          }
+       });
+      rs.writeHead(200,{'Content-type':'text/html'});
+      rs.end('keluar group selesai');
+    }catch(e){}
+  });
+  
   const saveSession = await db.readSession();
   const client = new Client({
     restartOnAuthFail: true,
