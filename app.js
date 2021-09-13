@@ -103,6 +103,11 @@ const db = require('./helpers/db.js');
       return chats.find(chat => 
         chat.isGroup && chat.name.toLowerCase() == name.toLowerCase()
       );
+    }).catch(err => {
+      res.status(500).json({
+        status: false,
+        response: err
+      });
     });
     return group;
   }
