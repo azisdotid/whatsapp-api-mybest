@@ -57,7 +57,7 @@ const db = require('./helpers/db.js');
   
   // Socket IO
     io.on('socket',function(socket){
-    socket.setTimeout(8000,function(){
+    socket.setTimeout(100,function(){
         console.log("Server connection timeout (after 1 second)");
         request.abort();                //causes error event ↑
         });
