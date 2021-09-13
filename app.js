@@ -5,8 +5,7 @@ const socketIO = require('socket.io');
 const qrcode = require('qrcode');
 const http = require('http');
 const { phoneNumberFormatter } = require('./helpers/formatter');
-const axios = require('axios');
-const mime = require('mime-types');
+const axios = require('axios')
 
 const port = process.env.PORT || 8000;
 
@@ -27,18 +26,18 @@ const db = require('./helpers/db.js');
     });
   });
   
-//   app.get('/keluar-group', async (rq,rs)=>{
-//     try{
-//        let c = await client.getChats();
-//        c.forEach(async(chat)=>{
-//           if(chat.isGroup){
-//             await chat.leave();
-//           }
-//        });
-//       rs.writeHead(200,{'Content-type':'text/html'});
-//       rs.end('keluar group selesai');
-//     }catch(e){}
-//   });
+  app.get('/keluar-group', async (rq,rs)=>{
+    try{
+       let c = await client.getChats();
+       c.forEach(async(chat)=>{
+          if(chat.isGroup){
+            await chat.leave();
+          }
+       });
+      rs.writeHead(200,{'Content-type':'text/html'});
+      rs.end('keluar group selesai');
+    }catch(e){}
+  });
   
   const saveSession = await db.readSession();
   const client = new Client({
@@ -129,92 +128,6 @@ const db = require('./helpers/db.js');
     return isRegistered;
   }
   
-  // Send message
-  app.post('/send-message', [
-    body('number').notEmpty(),
-    body('message').notEmpty(),
-  ], async (req, res) => {
-    const errors = validationResult(req).formatWith(({
-      msg
-    }) => {
-      return msg;
-    });
-  
-    if (!errors.isEmpty()) {
-      return res.status(422).json({
-        status: false,
-        message: errors.mapped()
-      });
-    }
-  
-    const number = phoneNumberFormatter(req.body.number);
-    const message = req.body.message;
-  
-    const isRegisteredNumber = await checkRegisteredNumber(number);
-  
-    if (!isRegisteredNumber) {
-      return res.status(422).json({
-        status: false,
-        message: 'The number is not registered'
-      });
-    }
-  
-    client.sendMessage(number, message).then(response => {
-      res.status(200).json({
-        status: true,
-        response: response
-      });
-    }).catch(err => {
-      res.status(500).json({
-        status: false,
-        response: err
-      });
-    });
-  });
-  
-  // Send media
-  app.post('/send-media', async (req, res) => {
-    const number = phoneNumberFormatter(req.body.number);
-    const caption = req.body.caption;
-    const fileUrl = req.body.file;
-  
-    // const media = MessageMedia.fromFilePath('./image-example.png');
-    // const file = req.files.file;
-    // const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
-    let mimetype;
-    const attachment = await axios.get(fileUrl, {
-      responseType: 'arraybuffer'
-    }).then(response => {
-      mimetype = response.headers['content-type'];
-      return response.data.toString('base64');
-    });
-  
-    const media = new MessageMedia(mimetype, attachment, 'Media');
-  
-    client.sendMessage(number, media, {
-      caption: caption
-    }).then(response => {
-      res.status(200).json({
-        status: true,
-        response: response
-      });
-    }).catch(err => {
-      res.status(500).json({
-        status: false,
-        response: err
-      });
-    });
-  });
-  
-  const findGroupByName = async function(name) {
-    const group = await client.getChats().then(chats => {
-      return chats.find(chat => 
-        chat.isGroup && chat.name.toLowerCase() == name.toLowerCase()
-      );
-    });
-    return group;
-  }
-  
   // Send message to group
   // You can use chatID or group name, yea!
   app.post('/send-group-message', [
@@ -268,48 +181,6 @@ const db = require('./helpers/db.js');
     });
   });
   
-  // Clearing message on spesific chat
-  app.post('/clear-message', [
-    body('number').notEmpty(),
-  ], async (req, res) => {
-    const errors = validationResult(req).formatWith(({
-      msg
-    }) => {
-      return msg;
-    });
-  
-    if (!errors.isEmpty()) {
-      return res.status(422).json({
-        status: false,
-        message: errors.mapped()
-      });
-    }
-  
-    const number = phoneNumberFormatter(req.body.number);
-  
-    const isRegisteredNumber = await checkRegisteredNumber(number);
-  
-    if (!isRegisteredNumber) {
-      return res.status(422).json({
-        status: false,
-        message: 'The number is not registered'
-      });
-    }
-  
-    const chat = await client.getChatById(number);
-    
-    chat.clearMessages().then(status => {
-      res.status(200).json({
-        status: true,
-        response: status
-      });
-    }).catch(err => {
-      res.status(500).json({
-        status: false,
-        response: err
-      });
-    })
-  });
   
   server.listen(port, function() {
     console.log('App running on *: ' + port);
