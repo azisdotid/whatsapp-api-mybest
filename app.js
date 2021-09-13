@@ -1,11 +1,11 @@
-const { Client, MessageMedia } = require('whatsapp-web.js');
+const { Client } = require('whatsapp-web.js');
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const socketIO = require('socket.io');
 const qrcode = require('qrcode');
 const http = require('http');
 const { phoneNumberFormatter } = require('./helpers/formatter');
-const axios = require('axios')
+const axios = require('axios');
 
 const port = process.env.PORT || 8000;
 
@@ -24,19 +24,6 @@ const db = require('./helpers/db.js');
     res.sendFile('index.html', {
       root: __dirname
     });
-  });
-  
-  app.get('/keluar-group', async (rq,rs)=>{
-    try{
-       let c = await client.getChats();
-       c.forEach(async(chat)=>{
-          if(chat.isGroup){
-            await chat.leave();
-          }
-       });
-      rs.writeHead(200,{'Content-type':'text/html'});
-      rs.end('keluar group selesai');
-    }catch(e){}
   });
   
   const saveSession = await db.readSession();
@@ -61,27 +48,9 @@ const db = require('./helpers/db.js');
   client.on('message', msg => {
     if (msg.body == '!ping') {
       msg.reply('pong');
-    } else if (msg.body == 'good morning') {
-      msg.reply('selamat pagi');
-    } else if (msg.body == '!groups') {
-      client.getChats().then(chats => {
-        const groups = chats.filter(chat => chat.isGroup);
-  
-        if (groups.length == 0) {
-          msg.reply('You have no group yet.');
-        } else {
-          let replyMsg = '*YOUR GROUPS*\n\n';
-          groups.forEach((group, i) => {
-            replyMsg += `ID: ${group.id._serialized}\nName: ${group.name}\n\n`;
-          });
-          replyMsg += '_You can use the group id to send a message to the group._'
-          msg.reply(replyMsg);
-        }
-      });
-    }
-  
-    // Downloading media
-    
+    } else if (msg.body == 'Hai') {
+      msg.reply('Iya Hai Ugha.....');
+    } 
   });
   
   client.initialize();
@@ -123,9 +92,13 @@ const db = require('./helpers/db.js');
   });
   
   
-  const checkRegisteredNumber = async function(number) {
-    const isRegistered = await client.isRegisteredUser(number);
-    return isRegistered;
+  const findGroupByName = async function(name) {
+    const group = await client.getChats().then(chats => {
+      return chats.find(chat => 
+        chat.isGroup && chat.name.toLowerCase() == name.toLowerCase()
+      );
+    });
+    return group;
   }
   
   // Send message to group
@@ -180,7 +153,6 @@ const db = require('./helpers/db.js');
       });
     });
   });
-  
   
   server.listen(port, function() {
     console.log('App running on *: ' + port);
