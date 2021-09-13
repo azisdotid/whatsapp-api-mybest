@@ -5,7 +5,6 @@ const socketIO = require('socket.io');
 const qrcode = require('qrcode');
 const http = require('http');
 const { phoneNumberFormatter } = require('./helpers/formatter');
-//const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
 
@@ -19,9 +18,6 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
-// app.use(fileUpload({
-//   debug: true
-// }));
 
 const db = require('./helpers/db.js');
 (async() => {
